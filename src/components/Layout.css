@@ -1,0 +1,59 @@
+/* src/components/Layout.css */
+
+.header {
+  background-color: #118a8c;
+  padding: 10px 0 0 0;
+  min-height: 80;
+}
+
+.footer {
+  background-color: #118a8c;
+  color: white;
+  padding: 10px 0;
+  min-height: 150px;
+}
+
+.logo {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+}
+
+.main-content {
+  padding: 20px;
+  background-color: #f5f5f5; /* A neutral background color for main content */
+  color: #07080B;
+  min-height: calc(100vh - 100px); /* Adjust for header and footer height */
+}
+
+.app-bar {
+  background-color: #118a8c !important;
+  border-radius: 0;
+  border: none;
+  margin-bottom: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1000;
+}
+
+/* .MuiInputBase-input {
+  color: white !important;
+} */
+
+/* .MuiSvgIcon-root {
+  color: white !important;
+} */
+
+/* .MuiMenu-paper {
+  background-color: white !important;
+  color: #12131A !important;
+} */
+
+/* .MuiMenuItem-root {
+  background-color: transparent !important;
+} */
+
+/* .MuiMenuItem-root.Mui-selected {
+  background-color: #1AAE88 !important;
+} */
