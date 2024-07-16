@@ -15,7 +15,7 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
-const services = [
+const service = [
   { icon: <DescriptionIcon style={{ fontSize: 100 }} />, label: 'Docs' },
   { icon: <LaptopMacIcon style={{ fontSize: 100 }} />, label: 'Jupyter' },
   { icon: <DashboardIcon style={{ fontSize: 100 }} />, label: 'Hue' },
@@ -89,7 +89,7 @@ const Service = () => {
           Services
         </Typography>
         <Grid container spacing={4} justifyContent="center">
-          {services.map((service, index) => (
+          {service.map((service, index) => (
             <Grid item xs={12} sm={4} md={2} key={index} sx={{ textAlign: 'center' }}>
               <IconButton
                 color="primary"

@@ -1,9 +1,9 @@
-// src/components/Layout.js
-import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Box, InputBase } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Box, InputBase, Badge, List, ListItem, ListItemText, ListSubheader } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { AccountCircle, MoreVert, Search as SearchIcon } from '@mui/icons-material';
+import { AccountCircle, MoreVert, Search as SearchIcon, Notifications as NotificationsIcon } from '@mui/icons-material';
 import { styled, alpha } from '@mui/material/styles';
+import { getIncompleteUsers } from '../services/userServices'; // Import your API call
 import './Layout.css'; // Assuming additional styles are added in Layout.css
 
 const Search = styled('div')(({ theme }) => ({
@@ -49,7 +49,20 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 const Layout = ({ children }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch notifications on component mount
+    const fetchNotifications = async () => {
+      const data = await getIncompleteUsers(); // Fetch incomplete user setup data
+      setNotifications(data);
+      setNotificationCount(data.length);
+    };
+    fetchNotifications();
+  }, []);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -72,6 +85,14 @@ const Layout = ({ children }) => {
     setMenuAnchorEl(null);
   };
 
+  const handleNotificationMenuOpen = (event) => {
+    setNotificationAnchorEl(event.currentTarget);
+  };
+
+  const handleNotificationMenuClose = () => {
+    setNotificationAnchorEl(null);
+  };
+
   return (
     <div className="layout">
       <header className="header">
@@ -91,6 +112,39 @@ const Layout = ({ children }) => {
               />
             </Search>
             <Box ml={2}>
+              <IconButton color="inherit" onClick={handleNotificationMenuOpen}>
+                <Badge badgeContent={notificationCount} color="secondary">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+              <Menu
+                anchorEl={notificationAnchorEl}
+                open={Boolean(notificationAnchorEl)}
+                onClose={handleNotificationMenuClose}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+              >
+                <List
+                  subheader={<ListSubheader>Notifications</ListSubheader>}
+                >
+                  {notifications.map((notification, index) => (
+                    <ListItem
+                      button
+                      key={index}
+                      component={RouterLink}
+                      to="/user-setup" // Adjust as needed for your routing
+                    >
+                      <ListItemText primary={`User ${notification.standard_id} needs setup`} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Menu>
               <IconButton onClick={handleDropdownMenuOpen} color="inherit">
                 <MoreVert />
               </IconButton>

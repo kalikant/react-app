@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
-import Services from './pages/Services';
+import Services from './pages/Service';
 import QuickLinks from './pages/QuickLinks';
 import UserSetup from './pages/UserSetup';
 import OnboardingTrend from './pages/OnboardingTrend';

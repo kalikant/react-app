@@ -1,42 +1,29 @@
 // src/pages/Onboarding.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Stepper, Step, StepLabel, StepContent, StepIconProps,
-  Button, Paper, Typography, Box, TextField,
-  FormControl, FormControlLabel, Checkbox,
-  Radio, RadioGroup, Grid, Link, Avatar, Card, CardContent, Divider
+  Stepper, Step, StepLabel, Button, Paper, Typography, Box, TextField,
+  FormControl, FormControlLabel, Checkbox, Radio, RadioGroup, Grid, Link, Avatar, Card, CardContent, Divider
 } from '@mui/material';
 import { styled } from '@mui/system';
 import { Link as RouterLink } from 'react-router-dom';
-import {
-  AccountCircle as AccountCircleIcon,
-  Checklist as ChecklistIcon,
-  Settings as SettingsIcon,
-  Cloud as CloudIcon,
-  Storage as StorageIcon,
-  Security as SecurityIcon
-} from '@mui/icons-material';
+import { AccountCircle as AccountCircleIcon, Checklist as ChecklistIcon, Settings as SettingsIcon, Cloud as CloudIcon, Storage as StorageIcon, Security as SecurityIcon } from '@mui/icons-material';
+import { createUser, updateUser, getUsers, deleteUser } from '../services/userServices';
 
 const FormControlContainer = styled(FormControl)(({ theme }) => ({
   marginBottom: theme.spacing(2),
 }));
 
-const CustomStepIcon = (props: StepIconProps) => {
+const CustomStepIcon = (props) => {
   const { active, completed, className } = props;
 
-  const icons: { [index: string]: React.ReactElement } = {
+  const icons = {
     1: <ChecklistIcon style={{ fontSize: '2.5rem' }} />,
     2: <AccountCircleIcon style={{ fontSize: '2.5rem' }} />,
     3: <SettingsIcon style={{ fontSize: '2.5rem' }} />,
   };
 
   return (
-    <div
-      className={className}
-      style={{
-        color: active || completed ? '#1AAE88' : 'rgba(0, 0, 0, 0.38)',
-      }}
-    >
+    <div className={className} style={{ color: active || completed ? '#1AAE88' : 'rgba(0, 0, 0, 0.38)' }}>
       {icons[String(props.icon)]}
     </div>
   );
@@ -44,8 +31,51 @@ const CustomStepIcon = (props: StepIconProps) => {
 
 const Onboarding = () => {
   const [activeStep, setActiveStep] = useState(0);
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    standard_id: '',
+    email: '',
+    team: '',
+    purpose: '',
+    mrm_declaration: false,
+    unixuser: false,
+    jupyter_access: false,
+    hdfs_access: false,
+    jupyter_config: '',
+    vault_config: '',
+    databases: '',
+    custom_profile: false,
+    s3_buckets: '',
+    s3_buckets_access_list: '',
+    quartz_access: false,
+    comments: '',
+  });
+  const [users, setUsers] = useState([]);
+  const [editingUserId, setEditingUserId] = useState(null);
 
-  const handleNext = () => {
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const users = await getUsers();
+      setUsers(users);
+    };
+    fetchUsers();
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleNext = async () => {
+    if (activeStep === steps.length - 1) {
+      if (editingUserId) {
+        await updateUser(editingUserId, formData);
+      } else {
+        await createUser(formData);
+      }
+      const users = await getUsers();
+      setUsers(users);
+    }
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
@@ -55,6 +85,17 @@ const Onboarding = () => {
 
   const handleReset = () => {
     setActiveStep(0);
+  };
+
+  const handleEdit = (user) => {
+    setFormData(user);
+    setEditingUserId(user.id);
+  };
+
+  const handleDelete = async (id) => {
+    await deleteUser(id);
+    const users = await getUsers();
+    setUsers(users);
   };
 
   const steps = [
@@ -68,23 +109,23 @@ const Onboarding = () => {
               <Typography variant="body2">Section 2: Please select the options below</Typography>
               <FormControlLabel
                 control={<Checkbox sx={{ color: '#1AAE88' }} />}
-                label={<Link component={RouterLink} to="#" sx={{ color: '#1D89CF' }}>Option 1</Link>}
+                label={<Link component={RouterLink} to="#" sx={{ color: '#1D89CF' }}>Policy 1</Link>}
               />
               <FormControlLabel
                 control={<Checkbox sx={{ color: '#1AAE88' }} />}
-                label={<Link component={RouterLink} to="#" sx={{ color: '#1D89CF' }}>Option 2</Link>}
+                label={<Link component={RouterLink} to="#" sx={{ color: '#1D89CF' }}>Policy 2</Link>}
               />
               <FormControlLabel
                 control={<Checkbox sx={{ color: '#1AAE88' }} />}
-                label={<Link component={RouterLink} to="#" sx={{ color: '#1D89CF' }}>Option 3</Link>}
+                label={<Link component={RouterLink} to="#" sx={{ color: '#1D89CF' }}>Policy 3</Link>}
               />
               <FormControlLabel
                 control={<Checkbox sx={{ color: '#1AAE88' }} />}
-                label={<Link component={RouterLink} to="#" sx={{ color: '#1D89CF' }}>Option 4</Link>}
+                label={<Link component={RouterLink} to="#" sx={{ color: '#1D89CF' }}>Policy 4</Link>}
               />
               <FormControlLabel
                 control={<Checkbox sx={{ color: '#1AAE88' }} />}
-                label={<Link component={RouterLink} to="#" sx={{ color: '#1D89CF' }}>Option 5</Link>}
+                label={<Link component={RouterLink} to="#" sx={{ color: '#1D89CF' }}>Policy 5</Link>}
               />
             </FormControlContainer>
             <Typography variant="body1">Notice Placeholder</Typography>
@@ -104,17 +145,12 @@ const Onboarding = () => {
       description: (
         <Card sx={{ mb: 2, bgcolor: 'white' }}>
           <CardContent>
-            <TextField label="First Name" fullWidth margin="normal" />
-            <TextField label="Last Name" fullWidth margin="normal" />
-            <TextField label="Standard ID (NBK)" fullWidth margin="normal" />
-            <TextField label="Team Name" fullWidth margin="normal" />
-            <TextField
-              label="Purpose"
-              fullWidth
-              margin="normal"
-              multiline
-              rows={4}
-            />
+            <TextField name="first_name" label="First Name" fullWidth margin="normal" value={formData.first_name} onChange={handleChange} />
+            <TextField name="last_name" label="Last Name" fullWidth margin="normal" value={formData.last_name} onChange={handleChange} />
+            <TextField name="standard_id" label="Standard ID (NBK)" fullWidth margin="normal" value={formData.standard_id} onChange={handleChange} />
+            <TextField name="email" label="Email" fullWidth margin="normal" value={formData.email} onChange={handleChange} />
+            <TextField name="team" label="Team Name" fullWidth margin="normal" value={formData.team} onChange={handleChange} />
+            <TextField name="purpose" label="Purpose" fullWidth margin="normal" multiline rows={4} value={formData.purpose} onChange={handleChange} />
           </CardContent>
         </Card>
       ),
