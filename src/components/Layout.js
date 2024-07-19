@@ -1,9 +1,10 @@
+// src/components/Layout.js
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Box, InputBase, Badge, List, ListItem, ListItemText, ListSubheader } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { AccountCircle, MoreVert, Search as SearchIcon, Notifications as NotificationsIcon } from '@mui/icons-material';
 import { styled, alpha } from '@mui/material/styles';
-import { getIncompleteUsers } from '../services/userServices'; // Import your API call
+import { getIncompleteUsers } from '../services/userServices';
 import './Layout.css'; // Assuming additional styles are added in Layout.css
 
 const Search = styled('div')(({ theme }) => ({
@@ -54,13 +55,13 @@ const Layout = ({ children }) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const navigate = useNavigate();
 
+  const fetchNotifications = async () => {
+    const data = await getIncompleteUsers();
+    setNotifications(data);
+    setNotificationCount(data.length);
+  };
+
   useEffect(() => {
-    // Fetch notifications on component mount
-    const fetchNotifications = async () => {
-      const data = await getIncompleteUsers(); // Fetch incomplete user setup data
-      setNotifications(data);
-      setNotificationCount(data.length);
-    };
     fetchNotifications();
   }, []);
 
@@ -130,9 +131,7 @@ const Layout = ({ children }) => {
                   horizontal: 'right',
                 }}
               >
-                <List
-                  subheader={<ListSubheader>Notifications</ListSubheader>}
-                >
+                <List subheader={<ListSubheader>Notifications</ListSubheader>}>
                   {notifications.map((notification, index) => (
                     <ListItem
                       button
@@ -195,7 +194,9 @@ const Layout = ({ children }) => {
         </AppBar>
       </header>
       <main className="main-content">
-        {children}
+        {React.Children.map(children, (child) =>
+          React.cloneElement(child, { refreshNotifications: fetchNotifications })
+        )}
       </main>
       <footer className="footer">
         <Box py={3} textAlign="center">
