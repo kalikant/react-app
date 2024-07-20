@@ -1,6 +1,6 @@
 // src/pages/Service.js
 import React, { useState } from 'react';
-import { Box, Grid, Typography, Paper, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Select, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
+import { Box, Grid, Typography, Paper, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Select, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import DescriptionIcon from '@mui/icons-material/Description';
 import LaptopMacIcon from '@mui/icons-material/LaptopMac';
@@ -12,10 +12,11 @@ import BuildIcon from '@mui/icons-material/Build';
 import SecurityIcon from '@mui/icons-material/Security';
 import WifiIcon from '@mui/icons-material/Wifi';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
-const service = [
+const services = [
   { icon: <DescriptionIcon style={{ fontSize: 100 }} />, label: 'Docs' },
   { icon: <LaptopMacIcon style={{ fontSize: 100 }} />, label: 'Jupyter' },
   { icon: <DashboardIcon style={{ fontSize: 100 }} />, label: 'Hue' },
@@ -39,6 +40,8 @@ const Service = () => {
   const [open, setOpen] = useState(false);
   const [kernel, setKernel] = useState('');
   const [showTable, setShowTable] = useState(false);
+  const [output, setOutput] = useState('');
+  const [dialogTitle, setDialogTitle] = useState('');
   const navigate = useNavigate();
 
   const handleClickOpen = () => {
@@ -49,6 +52,7 @@ const Service = () => {
     setOpen(false);
     setShowTable(false);
     setKernel('');
+    setOutput('');
   };
 
   const handleKernelChange = (event) => {
@@ -74,11 +78,22 @@ const Service = () => {
     saveAs(blob, 'libraries.csv');
   };
 
-  const handleServiceClick = (label) => {
+  const handleServiceClick = async (label) => {
     if (label === 'Packages') {
+      setDialogTitle('Select Kernel');
       handleClickOpen();
     } else if (label === 'Docs') {
       navigate('/documentation');
+    } else {
+      setDialogTitle(label);
+      try {
+        const response = await axios.get(`https://api.example.com/${label.toLowerCase()}`);
+        setOutput(response.data);
+        handleClickOpen();
+      } catch (error) {
+        setOutput('Error fetching data');
+        handleClickOpen();
+      }
     }
   };
 
@@ -89,7 +104,7 @@ const Service = () => {
           Services
         </Typography>
         <Grid container spacing={4} justifyContent="center">
-          {service.map((service, index) => (
+          {services.map((service, index) => (
             <Grid item xs={12} sm={4} md={2} key={index} sx={{ textAlign: 'center' }}>
               <IconButton
                 color="primary"
@@ -104,55 +119,62 @@ const Service = () => {
         </Grid>
       </Paper>
 
-      {/* Dialog for Packages */}
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Select Kernel</DialogTitle>
+        <DialogTitle>{dialogTitle}</DialogTitle>
         <DialogContent>
-          <Select
-            value={kernel}
-            onChange={handleKernelChange}
-            displayEmpty
-            fullWidth
-            sx={{ marginBottom: 2 }}
-          >
-            <MenuItem value="" disabled>Select a kernel</MenuItem>
-            <MenuItem value="python3.9">python3.9</MenuItem>
-            <MenuItem value="python3.9 nightly">python3.9 nightly</MenuItem>
-            <MenuItem value="Quartz">Quartz</MenuItem>
-            <MenuItem value="Quartz Nightly">Quartz Nightly</MenuItem>
-            <MenuItem value="DASH">DASH</MenuItem>
-            <MenuItem value="DASH nightly">DASH nightly</MenuItem>
-          </Select>
-          {showTable && (
-            <TableContainer component={Paper} sx={{ marginTop: 2 }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Library</TableCell>
-                    <TableCell>Version</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {libraries.map((library, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{library.library}</TableCell>
-                      <TableCell>{library.version}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+          {dialogTitle === 'Select Kernel' ? (
+            <>
+              <Select
+                value={kernel}
+                onChange={handleKernelChange}
+                displayEmpty
+                fullWidth
+                sx={{ marginBottom: 2 }}
+              >
+                <MenuItem value="" disabled>Select a kernel</MenuItem>
+                <MenuItem value="python3.9">python3.9</MenuItem>
+                <MenuItem value="python3.9 nightly">python3.9 nightly</MenuItem>
+                <MenuItem value="Quartz">Quartz</MenuItem>
+                <MenuItem value="Quartz Nightly">Quartz Nightly</MenuItem>
+                <MenuItem value="DASH">DASH</MenuItem>
+                <MenuItem value="DASH nightly">DASH nightly</MenuItem>
+              </Select>
+              {showTable && (
+                <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Library</TableCell>
+                        <TableCell>Version</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {libraries.map((library, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{library.library}</TableCell>
+                          <TableCell>{library.version}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </>
+          ) : (
+            <Typography>{output}</Typography>
           )}
         </DialogContent>
         <DialogActions>
-          {showTable ? (
+          {dialogTitle === 'Select Kernel' && showTable ? (
             <>
               <Button onClick={downloadExcel} color="primary">Download Excel</Button>
               <Button onClick={downloadCSV} color="primary">Download CSV</Button>
               <Button onClick={handleClose} color="primary">Close</Button>
             </>
-          ) : (
+          ) : dialogTitle === 'Select Kernel' ? (
             <Button onClick={handleKernelSelect} color="primary" disabled={!kernel}>Select</Button>
+          ) : (
+            <Button onClick={handleClose} color="primary">Close</Button>
           )}
         </DialogActions>
       </Dialog>

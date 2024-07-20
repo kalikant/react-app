@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Grid, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, InputAdornment, MenuItem, Select, FormControl, InputLabel, Button } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Grid, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, InputAdornment, MenuItem, Select, FormControl, InputLabel, Button, IconButton, TablePagination } from '@mui/material';
 import BookingsIcon from '@mui/icons-material/CalendarToday';
 import UsersIcon from '@mui/icons-material/People';
 import RevenueIcon from '@mui/icons-material/AttachMoney';
@@ -41,40 +41,115 @@ const pieData = [
   { name: 'No Usage', value: 200 },
 ];
 
-const tableData = [
+const initialTableData = [
   { date: '2023-07-01', name: 'John Doe', status: 'Active', role: 'Admin' },
   { date: '2023-07-02', name: 'Jane Smith', status: 'Inactive', role: 'User' },
-  // Add more rows as needed
+];
+
+const onboardingTableData = [
+  { date: '2023-07-01', name: 'John Doe', status: 'Active', role: 'Admin', title: 'Software Eng.', standard_id: 'DG234'},
+  { date: '2023-07-02', name: 'Jane Smith', status: 'Inactive', role: 'User', title: 'Software Eng.', standard_id: 'GF456' },
+];
+
+const onlineUsersTableData = [
+  { date: '2023-07-01', count: '50' },
+  { date: '2023-07-02', count: '100' },
+  { date: '2023-07-01', count: '50' },
+  { date: '2023-07-02', count: '100' },
+  { date: '2023-07-01', count: '50' },
+  { date: '2023-07-02', count: '100' },
+  { date: '2023-07-01', count: '50' },
+  { date: '2023-07-02', count: '100' },
+  { date: '2023-07-01', count: '50' },
+  { date: '2023-07-02', count: '100' },
+  { date: '2023-07-01', count: '50' },
+  { date: '2023-07-02', count: '100' },
+  { date: '2023-07-01', count: '50' },
+  { date: '2023-07-02', count: '100' },
+  { date: '2023-07-01', count: '50' },
+  { date: '2023-07-02', count: '100' },
 ];
 
 const Dashboard = () => {
-  const sections = [
-    { icon: <BookingsIcon sx={{ fontSize: 50 }} />, title: 'Onboarding', value: '281', info: '+55% than last week', bgColor: '#1AAE88' },
-    { icon: <UsersIcon sx={{ fontSize: 50 }} />, title: 'Online Users', value: '2,300', info: '+3% than yesterday', bgColor: '#49a3f1' },
-    { icon: <RevenueIcon sx={{ fontSize: 50 }} />, title: 'Notebooks', value: '34k', info: '+1% than yesterday', bgColor: '#118a8c' },
-    { icon: <FollowersIcon sx={{ fontSize: 50 }} />, title: 'Servers', value: '91', info: 'Good health', bgColor: '#1AAE88' },
-    { icon: <SalesIcon sx={{ fontSize: 50 }} />, title: 'Memory', value: '4.5/10 TB', info: '+10% than yesterday', bgColor: '#49a3f1' },
-    { icon: <TasksIcon sx={{ fontSize: 50 }} />, title: 'Memory Consumption', value: '5 GB avg', info: 'Per user', bgColor: '#118a8c' },
-  ];
+  const [sections, setSections] = useState([
+    { icon: <BookingsIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Onboarding', value: '', info: '', bgColor: '#1AAE88', apiData: onboardingTableData, tableHeaders: ['Date', 'Name', 'Status', 'Role', 'Title', 'Standard ID'] },
+    { icon: <UsersIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Online Users', value: '', info: '', bgColor: '#49a3f1', apiData: onlineUsersTableData, tableHeaders: ['Date', 'Count'] },
+    { icon: <RevenueIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Notebooks', value: '', info: '', bgColor: '#118a8c', apiData: initialTableData, tableHeaders: ['Date', 'Name', 'Status', 'Role'] },
+    { icon: <FollowersIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Servers', value: '', info: '', bgColor: '#1AAE88', apiData: initialTableData, tableHeaders: ['Date', 'Name', 'Status', 'Role'] },
+    { icon: <SalesIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Memory', value: '', info: '', bgColor: '#49a3f1', apiData: initialTableData, tableHeaders: ['Date', 'Name', 'Status', 'Role'] },
+    { icon: <TasksIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Memory Consumption', value: '', info: '', bgColor: '#118a8c', apiData: initialTableData, tableHeaders: ['Date', 'Name', 'Status', 'Role'] },
+  ]);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredData, setFilteredData] = useState(tableData);
+  const [filteredData, setFilteredData] = useState(initialTableData);
+  const [tableData, setTableData] = useState(initialTableData);
+  const [tableHeaders, setTableHeaders] = useState(['Date', 'Name', 'Status', 'Role']);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const tableRef = useRef(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Dummy data
+        const dummyData = {
+          onboarding: { value: '281', info: '+55% than last week', apiData: onboardingTableData, tableHeaders: ['Date', 'Name', 'Status', 'Role', 'Title', 'Standard ID'] },
+          onlineUsers: { value: '2,300', info: '+3% than yesterday', apiData: onlineUsersTableData, tableHeaders: ['Date', 'Count'] },
+          notebooks: { value: '34k', info: '+1% than yesterday', apiData: initialTableData, tableHeaders: ['Date', 'Name', 'Status', 'Role'] },
+          servers: { value: '91', info: 'Good health', apiData: initialTableData, tableHeaders: ['Date', 'Name', 'Status', 'Role'] },
+          memory: { value: '4.5/10 TB', info: '+10% than yesterday', apiData: initialTableData, tableHeaders: ['Date', 'Name', 'Status', 'Role'] },
+          memoryConsumption: { value: '5 GB avg', info: 'Per user', apiData: initialTableData, tableHeaders: ['Date', 'Name', 'Status', 'Role'] },
+        };
+
+        setSections([
+          { icon: <BookingsIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Onboarding', value: dummyData.onboarding.value, info: dummyData.onboarding.info, bgColor: '#1AAE88', apiData: dummyData.onboarding.apiData, tableHeaders: dummyData.onboarding.tableHeaders },
+          { icon: <UsersIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Online Users', value: dummyData.onlineUsers.value, info: dummyData.onlineUsers.info, bgColor: '#49a3f1', apiData: dummyData.onlineUsers.apiData, tableHeaders: dummyData.onlineUsers.tableHeaders },
+          { icon: <RevenueIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Notebooks', value: dummyData.notebooks.value, info: dummyData.notebooks.info, bgColor: '#118a8c', apiData: dummyData.notebooks.apiData, tableHeaders: dummyData.notebooks.tableHeaders },
+          { icon: <FollowersIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Servers', value: dummyData.servers.value, info: dummyData.servers.info, bgColor: '#1AAE88', apiData: dummyData.servers.apiData, tableHeaders: dummyData.servers.tableHeaders },
+          { icon: <SalesIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Memory', value: dummyData.memory.value, info: dummyData.memory.info, bgColor: '#49a3f1', apiData: dummyData.memory.apiData, tableHeaders: dummyData.memory.tableHeaders },
+          { icon: <TasksIcon sx={{ fontSize: 50, color: '#FFFFFF' }} />, title: 'Memory Consumption', value: dummyData.memoryConsumption.value, info: dummyData.memoryConsumption.info, bgColor: '#118a8c', apiData: dummyData.memoryConsumption.apiData, tableHeaders: dummyData.memoryConsumption.tableHeaders },
+        ]);
+      } catch (error) {
+        console.error('Error fetching data', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleSearchChange = (event) => {
     const value = event.target.value.toLowerCase();
     setSearchTerm(value);
-    const filtered = tableData.filter(row => row.name.toLowerCase().includes(value) || row.status.toLowerCase().includes(value) || row.role.toLowerCase().includes(value));
+    const filtered = tableData.filter(row => Object.values(row).some(val => val.toString().toLowerCase().includes(value)));
     setFilteredData(filtered);
+  };
+
+  const handleIconClick = (apiData, headers) => {
+    setTableData(apiData);
+    setFilteredData(apiData);
+    setTableHeaders(headers);
+    tableRef.current.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
       <Grid container spacing={3}>
-        {/* Top row of statistics */}
         {sections.map((section, index) => (
           <Grid item xs={12} sm={6} md={2} key={index}>
             <Paper elevation={3} sx={{ padding: 2, backgroundColor: section.bgColor, color: '#ffffff' }}>
-              {section.icon}
+              <IconButton onClick={() => handleIconClick(section.apiData, section.tableHeaders)}>
+                {section.icon}
+              </IconButton>
               <Typography variant="h5">{section.title}</Typography>
               <Typography variant="h4">{section.value}</Typography>
               <Typography variant="body2">{section.info}</Typography>
@@ -218,9 +293,9 @@ const Dashboard = () => {
         </Grid>
 
         {/* Table with Search */}
-        <Grid item xs={12} sx={{ mt: 3 }}>
+        <Grid item xs={12} sx={{ mt: 3 }} ref={tableRef}>
           <Paper elevation={3} sx={{ padding: 2 }}>
-            <Typography variant="h6" gutterBottom>Users</Typography>
+            <Typography variant="h6" gutterBottom>Data Table</Typography>
             <TextField
               variant="outlined"
               placeholder="Search..."
@@ -236,28 +311,35 @@ const Dashboard = () => {
               fullWidth
               sx={{ marginBottom: 2 }}
             />
-            <TableContainer>
-              <Table>
+            <TableContainer sx={{ maxHeight: 440 }}>
+              <Table stickyHeader>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Role</TableCell>
+                    {tableHeaders.map((header, index) => (
+                      <TableCell key={index}>{header}</TableCell>
+                    ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredData.map((row, index) => (
+                  {filteredData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
                     <TableRow key={index}>
-                      <TableCell>{row.date}</TableCell>
-                      <TableCell>{row.name}</TableCell>
-                      <TableCell>{row.status}</TableCell>
-                      <TableCell>{row.role}</TableCell>
+                      {tableHeaders.map((header, cellIndex) => (
+                        <TableCell key={cellIndex}>{row[header.toLowerCase().replace(' ', '_')]}</TableCell>
+                      ))}
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[10, 25, 50]}
+              component="div"
+              count={filteredData.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
           </Paper>
         </Grid>
       </Grid>
